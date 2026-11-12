@@ -27,6 +27,16 @@ fn collect_survivors(distances: &[f32], threshold: f32, positions: &mut Vec<u32>
 /// only when the candidate survives. Avoids the data-dependent `push` (and its
 /// branch misprediction in the ~99%-pruned case) and lets the compare vectorize.
 /// Portable fallback, and the tail handler for the SIMD paths below.
+#[cfg(not(target_arch = "aarch64"))]
+#[cfg(not(
+    and(
+        target_arch = "x86_64",
+        any(
+            is_x86_feature_detected = "avx512f",
+            is_x86_feature_detected = "avx2",
+        )
+    )
+))]
 fn fill_survivors_scalar(distances: &[f32], threshold: f32, out: &mut [MaybeUninit<u32>]) -> usize {
     let mut count = 0usize;
     for (i, &dist) in distances.iter().enumerate() {
